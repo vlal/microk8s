@@ -9,6 +9,8 @@ import sys
 import json
 import socket
 
+from requests_toolbelt import MultipartEncoder
+
 from common.cluster.utils import (
     get_callback_token,
     get_cluster_agent_port,
@@ -130,11 +132,14 @@ def do_image_import(image_data):
     for node_ep, token in endpoints:
         try:
             print("Pushing OCI images to {}".format(node_ep))
+            encoder = MultipartEncoder(
+                    fields={'file': ('images', image_data, 'text/plain')}
             res = requests.post(
                 "https://{}/{}/image/import".format(node_ep, CLUSTER_API_V2),
-                data=image_data,
+                data=encoder,
                 headers={
                     "x-microk8s-callback-token": token,
+                    "Content-Type": encoder.content_type
                 },
                 verify=False,
             )
